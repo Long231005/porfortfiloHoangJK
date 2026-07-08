@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOANG.Jk | Camera Man & Video Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Krub:wght@200;300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@700&family=Space+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #f5f5f3;
+            --text-secondary: #8a8a86;
+            --text-muted: #5a5a56;
+            --accent: #c9a962;
+            --accent-dim: #9a7a42;
+            --border: rgba(201, 169, 98, 0.15);
+            --grain-opacity: 0.04;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Sans', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            font-weight: 300;
+        }
+
+        /* Grain Overlay */
+        .grain {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            pointer-events: none;
+            z-index: 10000;
+            opacity: var(--grain-opacity);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            animation: grain 0.8s steps(10) infinite;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -10%); }
+            20% { transform: translate(-15%, 5%); }
+            30% { transform: translate(7%, -25%); }
+            40% { transform: translate(-5%, 25%); }
+            50% { transform: translate(-15%, 10%); }
+            60% { transform: translate(15%, 0%); }
+            70% { transform: translate(0%, 15%); }
+            80% { transform: translate(3%, 20%); }
+            90% { transform: translate(-10%, 10%); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, transparent 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            color: var(--text-primary);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 4rem;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .hero-subtitle {
+            font-size: 0.7rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1s ease 0.3s forwards;
+        }
+
+        .hero-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(4rem, 12vw, 10rem);
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            line-height: 0.95;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 1s ease 0.5s forwards;
+        }
+
+        .hero-title .accent {
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .hero-role {
+            font-size: 0.85rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1s ease 0.7s forwards;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 1rem 2.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1s ease 0.9s forwards;
+        }
+
+        .hero-cta:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .hero-cta svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .hero-cta:hover svg {
+            transform: translateX(5px);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeIn 1s ease 1.2s forwards;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 1; height: 40px; }
+            50% { opacity: 0.3; height: 60px; }
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Section Styling */
+        section {
+            padding: 10rem 4rem;
+        }
+
+        .section-header {
+            margin-bottom: 5rem;
+        }
+
+        .section-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Krub', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            font-style: italic;
+            line-height: 1.2;
+        }
+
+        /* About Section */
+        .about {
+            background: var(--bg-secondary);
+            position: relative;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8rem;
+            align-items: center;
+        }
+
+        .about-image {
+            position: relative;
+            aspect-ratio: 3/4;
+            overflow: hidden;
+        }
+
+        .about-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-dim) 0%, var(--bg-tertiary) 100%);
+            z-index: 1;
+        }
+
+        .about-image-inner {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .profile-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+        }
+
+        .about-image-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 6rem;
+            font-weight: 300;
+            color: rgba(201, 169, 98, 0.3);
+        }
+
+        .about-image-frame {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: 20px;
+            bottom: 20px;
+            border: 1px solid var(--border);
+            z-index: 2;
+        }
+
+        .about-content h2 {
+            font-family: 'Krub', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            font-style: italic;
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        .about-content h2 .accent {
+            color: var(--accent);
+        }
+
+        .about-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Services Section */
+        .services {
+            background: var(--bg-primary);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .service-card {
+            background: var(--bg-primary);
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        .service-card:hover {
+            background: var(--bg-secondary);
+        }
+
+        .service-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 5rem;
+            font-weight: 300;
+            color: var(--border);
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            transition: color 0.4s ease;
+        }
+
+        .service-card:hover .service-number {
+            color: var(--accent);
+            opacity: 0.3;
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .service-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        .service-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .service-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .service-tag {
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        /* Portfolio Section */
+        .portfolio {
+            background: var(--bg-secondary);
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .portfolio-item {
+            aspect-ratio: 16/10;
+            background: var(--bg-tertiary);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            group: hover;
+        }
+
+        .portfolio-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: var(--bg-tertiary);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .portfolio-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10,10,10,0.95) 0%, transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .portfolio-item:hover .portfolio-overlay {
+            opacity: 1;
+        }
+
+        .portfolio-category {
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .portfolio-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+        }
+
+        .portfolio-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .portfolio-item:hover .portfolio-play {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .portfolio-play svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent);
+            margin-left: 4px;
+        }
+
+        /* Skills Section */
+        .skills {
+            background: var(--bg-primary);
+        }
+
+        .skills-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 6rem;
+        }
+
+        .skills-intro {
+            padding-top: 2rem;
+        }
+
+        .skills-intro p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 2rem;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .skill-item {
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .skill-item:last-child {
+            border-bottom: none;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .skill-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+        }
+
+        .skill-level {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .skill-bar {
+            height: 2px;
+            background: var(--bg-tertiary);
+            position: relative;
+        }
+
+        .skill-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--accent);
+            transition: width 1s ease;
+        }
+
+        /* Equipment Section */
+        .equipment {
+            background: var(--bg-secondary);
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .equipment-item {
+            text-align: center;
+            padding: 3rem 2rem;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+        }
+
+        .equipment-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .equipment-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1.5rem;
+            color: var(--accent);
+        }
+
+        .equipment-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+
+        .equipment-type {
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        /* Contact Section */
+        .contact {
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+        }
+
+        .contact-info h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        .contact-info h2 .accent {
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .contact-info p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contact-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .contact-link:hover {
+            color: var(--accent);
+        }
+
+        .contact-link svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1.2rem 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-group textarea {
+            resize: none;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            align-self: flex-start;
+            padding: 1rem 3rem;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: inherit;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 4rem;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .footer-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.2em;
+        }
+
+        .footer-copy {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-social a {
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .footer-social a:hover {
+            color: var(--accent);
+        }
+
+        .footer-social svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Scroll Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .about-grid,
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 4rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .skills-container {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 1.5rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            section {
+                padding: 6rem 2rem;
+            }
+
+            .hero {
+                padding: 2rem;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .about-stats {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 2rem;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Video Modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1000px;
+            aspect-ratio: 16/9;
+        }
+
+        .video-modal-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .video-modal-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            color: var(--accent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .video-modal-close:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .video-modal-close svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .portfolio-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">HOANG<span style="text-transform:lowercase;font-size:0.85em">.Jk</span></div>
+        <ul class="nav-links">
+            <li><a href="#about">Giới thiệu</a></li>
+            <li><a href="#portfolio">Portfolio</a></li>
+            <li><a href="#skills">Kỹ năng</a></li>
+            <li><a href="#contact">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <p class="hero-subtitle">Camera Man & Video Editor</p>
+            <h1 class="hero-title">
+                HOANG<br>
+                <span class="accent">Jk</span>
+            </h1>
+            <p class="hero-role" style="letter-spacing: 0.4em;">PORTFOLIO</p>
+            <a href="#portfolio" class="hero-cta">
+                Xem các dự án
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        <div class="scroll-indicator">
+            <span>Cuộn xuống</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="section-header reveal">
+            <p class="section-label">Về tôi</p>
+            <h2 class="section-title">Câu chuyện<br>qua từng khung hình</h2>
+        </div>
+        <div class="about-grid">
+            <div class="about-image reveal">
+                <img src="avatar.jpg" alt="Minh Hoang" class="profile-photo">
+                <div class="about-image-frame"></div>
+            </div>
+            <div class="about-content reveal">
+                <h2>Nghệ thuật chuyển động<br><span class="accent">không giới hạn</span></h2>
+                <p>Với hơn 11 năm kinh nghiệm trong ngành sản xuất video, tôi đam mê biến những khoảnh khắc thường ngày thành những tác phẩm nghệ thuật đầy cảm xúc. Mỗi dự án là một hành trình mới, nơi ánh sáng, màu sắc và nhịp điệu hòa quyện để kể câu chuyện độc đáo.</p>
+                <p>Tôi tin rằng mỗi thước phim đều có linh hồn riêng. Công việc của tôi là lắng nghe, cảm nhận và nắm bắt những khoảnh khắc đó để tạo nên những video chạm đến trái tim người xem.</p>
+                <div class="about-stats">
+                    <div class="stat">
+                        <div class="stat-number">11+</div>
+                        <div class="stat-label">Năm kinh nghiệm</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">80+</div>
+                        <div class="stat-label">Dự án hoàn thành</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">30+</div>
+                        <div class="stat-label">TVC cho các doanh nghiệp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section class="portfolio" id="portfolio">
+        <div class="section-header reveal">
+            <p class="section-label">Portfolio</p>
+            <h2 class="section-title">Những dự án<br>tiêu biểu</h2>
+        </div>
+        <div class="portfolio-grid">
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1Vc8yPDs4uZtFLwY-VWSIg3Nk4mf84oUA/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1Vc8yPDs4uZtFLwY-VWSIg3Nk4mf84oUA&sz=w600-h400" alt="Dự án 1" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 1</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1CmEhcqA5mwS7R_nWM1XuZTaW_bTSUz8T/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1CmEhcqA5mwS7R_nWM1XuZTaW_bTSUz8T&sz=w600-h400" alt="Dự án 2" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 2</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1gUQGjiwTzRCJ23iaLIiDpBYU19vAdwqR/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1gUQGjiwTzRCJ23iaLIiDpBYU19vAdwqR&sz=w600-h400" alt="Dự án 3" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 3</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1OCsoc9TH0mxRv3cZgm9bhHU5LfrRbriL/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1OCsoc9TH0mxRv3cZgm9bhHU5LfrRbriL&sz=w600-h400" alt="Dự án 4" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 4</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1T5WWozuKxy4H7ZPUAKVOhGEVn9HTutNB/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1T5WWozuKxy4H7ZPUAKVOhGEVn9HTutNB&sz=w600-h400" alt="Dự án 5" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 5</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1XgtbWxT-Ci3uJ36aV68tQ6_JFo8_ke72/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1XgtbWxT-Ci3uJ36aV68tQ6_JFo8_ke72&sz=w600-h400" alt="Dự án 6" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 6</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1juI_3-i_--X_xv8amQQJ8RDXurUYj2-G/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1juI_3-i_--X_xv8amQQJ8RDXurUYj2-G&sz=w600-h400" alt="Dự án 7" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 7</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1m_oFJ6hyyVJivJD2OxEmExTpiJqiYh-P/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1m_oFJ6hyyVJivJD2OxEmExTpiJqiYh-P&sz=w600-h400" alt="Dự án 8" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 8</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="portfolio-item reveal" onclick="openVideoModal('https://drive.google.com/file/d/1qtgE1S7sf3siyFHmGhRt4QoVsJoF2iVx/preview')">
+                <img src="https://drive.google.com/thumbnail?id=1qtgE1S7sf3siyFHmGhRt4QoVsJoF2iVx&sz=w600-h400" alt="Dự án 9" class="portfolio-thumbnail">
+                <div class="portfolio-overlay">
+                    <span class="portfolio-category">Google Drive</span>
+                    <h3 class="portfolio-title">Dự án 9</h3>
+                </div>
+                <div class="portfolio-play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section class="skills" id="skills">
+        <div class="section-header reveal">
+            <p class="section-label">Kỹ năng</p>
+            <h2 class="section-title">Công cụ &<br>Chuyên môn</h2>
+        </div>
+        <div class="skills-container">
+            <div class="skills-intro reveal">
+                <p>Không ngừng học hỏi và cập nhật xu hướng mới, tôi luôn đầu tư vào việc nâng cao kỹ năng để mang đến những sản phẩm video tốt nhất cho khách hàng.</p>
+            </div>
+            <div class="skills-list">
+                <div class="skill-item reveal">
+                    <div class="skill-header">
+                        <span class="skill-name">Camera Operation</span>
+                        <span class="skill-level">Chuyên gia</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 95%"></div>
+                    </div>
+                </div>
+                <div class="skill-item reveal">
+                    <div class="skill-header">
+                        <span class="skill-name">Adobe Premiere Pro</span>
+                        <span class="skill-level">Chuyên gia</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 92%"></div>
+                    </div>
+                </div>
+                <div class="skill-item reveal">
+                    <div class="skill-header">
+                        <span class="skill-name">After Effects</span>
+                        <span class="skill-level">Nâng cao</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div class="skill-item reveal">
+                    <div class="skill-header">
+                        <span class="skill-name">Lighting & Sound</span>
+                        <span class="skill-level">Chuyên gia</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 88%"></div>
+                    </div>
+                </div>
+                <div class="skill-item reveal">
+                    <div class="skill-header">
+                        <span class="skill-name">Storytelling</span>
+                        <span class="skill-level">Nâng cao</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 87%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="section-header reveal">
+            <p class="section-label">Liên hệ</p>
+            <h2 class="section-title">Bắt đầu<br>dự án của bạn</h2>
+        </div>
+        <div class="contact-content">
+            <div class="contact-info reveal">
+                <h2>Sẵn sàng <span class="accent">hợp tác</span></h2>
+                <p>Hãy để tôi biết về ý tưởng của bạn. Tôi luôn sẵn sàng lắng nghe và tư vấn để tạo ra sản phẩm video vượt xa kỳ vọng.</p>
+                <div class="contact-links">
+                    <a href="tel:+84975358833" class="contact-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                        +84 97 535 8833
+                    </a>
+                    <a href="mailto:minhhoang.vux11@gmail.com" class="contact-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        minhhoang.vux11@gmail.com
+                    </a>
+                    <a href="#" class="contact-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        Ha Noi City, Viet Nam
+                    </a>
+                </div>
+            </div>
+            <form class="contact-form reveal">
+                <div class="form-group">
+                    <input type="text" placeholder="Tên của bạn">
+                </div>
+                <div class="form-group">
+                    <input type="email" placeholder="Email">
+                </div>
+                <div class="form-group">
+                    <input type="text" placeholder="Tiêu đề dự án">
+                </div>
+                <div class="form-group">
+                    <textarea placeholder="Mô tả dự án của bạn..."></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Gửi yêu cầu</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-left">
+            <span class="footer-logo">HOANG<span style="color: var(--accent);text-transform:lowercase;font-size:0.85em">.Jk</span></span>
+            <span class="footer-copy">© 2026 Minh Hoang. All rights reserved.</span>
+        </div>
+        <div class="footer-social">
+            <a href="https://www.instagram.com/__mihhoang.vux/" target="_blank" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="2" width="20" height="20" rx="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+            </a>
+            <a href="https://www.facebook.com/minh.hoang.447821" target="_blank" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                </svg>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal">
+        <div class="video-modal-content">
+            <button class="video-modal-close" onclick="closeVideoModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <iframe id="videoFrame" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Scroll reveal animation
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const revealPoint = 150;
+
+                if (elementTop < windowHeight - revealPoint) {
+                    element.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Skill bar animation on scroll
+        function animateSkillBars() {
+            const skillBars = document.querySelectorAll('.skill-progress');
+            skillBars.forEach(bar => {
+                const windowHeight = window.innerHeight;
+                const elementTop = bar.getBoundingClientRect().top;
+
+                if (elementTop < windowHeight - 100) {
+                    bar.style.width = bar.style.width;
+                }
+            });
+        }
+
+        window.addEventListener('scroll', animateSkillBars);
+
+        // Video Modal Functions
+        function getEmbedUrl(url) {
+            // YouTube
+            if (url.indexOf('youtube.com/watch') !== -1) {
+                var parts = url.split('v=');
+                var videoId = parts[1] ? parts[1].split('&')[0] : '';
+                return 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            }
+            if (url.indexOf('youtu.be/') !== -1) {
+                var parts = url.split('youtu.be/')[1];
+                var videoId = parts ? parts.split('?')[0] : '';
+                return 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            }
+            // Facebook Reel - encode the URL
+            if (url.indexOf('facebook.com/reel') !== -1) {
+                var encodedUrl = encodeURIComponent(url);
+                return 'https://www.facebook.com/plugins/video.php?href=' + encodedUrl + '&show_text=false&autoplay=true';
+            }
+            // Google Drive - return direct embed URL
+            if (url.indexOf('drive.google.com') !== -1) {
+                var fileId = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (fileId && fileId[1]) {
+                    return 'https://drive.google.com/file/d/' + fileId[1] + '/preview?autoplay=1';
+                }
+                return url;
+            }
+            return url;
+        }
+
+        function openVideoModal(url) {
+            var modal = document.getElementById('videoModal');
+            var iframe = document.getElementById('videoFrame');
+            iframe.src = getEmbedUrl(url);
+            modal.style.display = 'flex';
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVideoModal() {
+            var modal = document.getElementById('videoModal');
+            var iframe = document.getElementById('videoFrame');
+            iframe.src = '';
+            modal.style.display = 'none';
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on click outside
+        document.getElementById('videoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeVideoModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeVideoModal();
+            }
+        });
+    </script>
+</body>
+</html>
